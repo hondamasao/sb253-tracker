@@ -1,5 +1,15 @@
 export { lighthouseAgent } from "./lighthouse";
+export type { LighthouseOutput } from "./lighthouse";
 export { siteSignalsAgent } from "./site-signals";
+export type { SiteSignalsOutput } from "./site-signals";
+export { technicalAnalysisAgent } from "./technical-analysis";
+export { seoAnalysisAgent } from "./seo-analysis";
+export { conversionOptimizationAgent } from "./conversion-optimization";
+export { trustCredibilityAgent } from "./trust-credibility";
+export { copywritingAgent } from "./copywriting";
+export { reportSynthesisAgent, buildFallbackExecutiveSummary } from "./report-synthesis";
+export type { SynthesisInput, SynthesisRawOutput } from "./report-synthesis";
+export type { CategoryAgentRawOutput } from "./shared";
 export { runAgentSafely } from "./run-safely";
 export type { Agent, AgentContext, AgentOutput } from "./types";
 export type { AgentRunResult } from "./run-safely";

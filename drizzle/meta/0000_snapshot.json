@@ -1,5 +1,5 @@
 {
-  "id": "49fac845-0a29-469b-a340-a398ece7421f",
+  "id": "ab0c9896-48eb-4c15-8a86-d90c35212c1e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -141,8 +141,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "description": {
-          "name": "description",
+        "why_it_matters": {
+          "name": "why_it_matters",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence": {
+          "name": "evidence",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -150,6 +156,18 @@
         "recommendation": {
           "name": "recommendation",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_impact": {
+          "name": "expected_impact",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence_refs": {
+          "name": "evidence_refs",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },

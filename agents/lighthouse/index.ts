@@ -5,6 +5,36 @@ const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed
 const PSI_TIMEOUT_MS = 45_000; // Google's own Lighthouse run is genuinely slow — see architecture doc §3
 const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"] as const;
 
+/**
+ * The shape of this agent's `raw` output, exported so M1b's Technical
+ * Analysis agent (agents/technical-analysis) can read it back typed
+ * instead of as `Record<string, unknown>` — see
+ * docs/18-m1b-ai-agent-architecture.md §2's data-flow table.
+ */
+export type LighthouseOutput = {
+  finalUrl: string;
+  strategy: "mobile";
+  categoryScores: {
+    performance: number | null;
+    accessibility: number | null;
+    bestPractices: number | null;
+    seo: number | null;
+  };
+  coreWebVitals: {
+    largestContentfulPaintMs: number | null;
+    cumulativeLayoutShift: number | null;
+    totalBlockingTimeMs: number | null;
+    speedIndexMs: number | null;
+    timeToInteractiveMs: number | null;
+  };
+  topOpportunities: Array<{
+    id: string | null;
+    title: string | null;
+    potentialSavingsMs: number | null;
+  }>;
+  analyzedAt: string;
+};
+
 type PsiAudit = {
   id?: string;
   title?: string;

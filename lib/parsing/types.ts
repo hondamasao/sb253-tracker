@@ -19,4 +19,19 @@ export type ParsedPage = {
   internalLinks: LinkInfo[];
   images: ImageInfo[];
   structuredData: StructuredDataInfo;
+  /**
+   * The four fields below exist for M1b's AI agents (Conversion, Trust,
+   * Copywriting) — see docs/18-m1b-ai-agent-architecture.md §2. All four
+   * are deterministic extraction (regex/keyword/DOM-query), computed here
+   * so the model never has to "search" raw text for these facts itself.
+   */
+  /** Cleaned, whitespace-normalized visible text, capped — for Copywriting to quote real sentences. */
+  visibleText: string;
+  /** Deduplicated, regex-extracted phone-number-shaped strings. */
+  phoneNumbers: string[];
+  hasContactForm: boolean;
+  /** Matched phrases from a small fixed CTA-language list found in visible text. */
+  ctaPhrases: string[];
+  /** Matched phrases from a small fixed trust-keyword list found in visible text. */
+  trustSignalMentions: string[];
 };

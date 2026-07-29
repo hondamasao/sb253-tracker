@@ -26,7 +26,8 @@ We build in **milestones** (see `09-milestones.md`). We do not start milestone N
 | 14 | `14-future-expansion.md` | What comes after the core product proves itself? |
 | 15 | `15-mvp-scope-and-m0-plan.md` | **Active plan.** What's the smallest version we build first, and the exact M0 setup steps? |
 | 16 | `16-report-quality-standard.md` | What makes a report worth $29 — the bar every AI finding must clear before it ships |
-| 17 | `17-m1-crawler-architecture.md` | **Active build (M1a).** How the crawler + deterministic data pipeline is designed, and why |
+| 17 | `17-m1-crawler-architecture.md` | How the crawler + deterministic data pipeline is designed, and why (M1a, done) |
+| 18 | `18-m1b-ai-agent-architecture.md` | **Active build (M1b).** How the 6 AI agents turn crawled facts into an evidence-grounded report |
 
 ## Tech stack — final decisions
 

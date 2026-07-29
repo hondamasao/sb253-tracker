@@ -35,7 +35,7 @@ Every delivered report (web view and PDF) contains these sections, in this order
 1. **Header** — business name, website URL, scan date, overall score, letter grade. This is the "wow, this was made for me" moment; it must be unmistakably about their specific business, front and center.
 2. **Executive summary** (3-5 sentences) — plain-English narrative naming the single biggest problem, its estimated cost in leads, and the overall trajectory ("your site is solid on mobile but is actively losing calls because...").
 3. **Category score breakdown** — the 7 MVP categories (Performance, Mobile, Accessibility, Technical & Local SEO, Content & Trust, AI Search Optimization, Site Completeness), each with a score and one-line plain-English translation of what that score means.
-4. **Estimated lost leads** — a stated range (e.g., "14-22 leads/month"), with a one-line note on how it's estimated (severity of issues × industry benchmark conversion assumptions) and a clear "estimate, not a guarantee" disclaimer, per `01-srd.md` FR-5.
+4. **Estimated lost leads** — a stated range (e.g., "14-22 leads/month"), with a one-line note on how it's estimated (severity of issues × industry benchmark conversion assumptions) and a clear "estimate, not a guarantee" disclaimer, per `01-srd.md` FR-5. **Amendment (M1b):** omitted entirely from the report for now, per explicit instruction — the same treatment this document already gives "Competitor snapshot" below. A number here without real industry-benchmark research behind it would itself be an ungrounded claim, which is exactly what Rules 5.3/5.4 exist to prevent. Revisit once that research exists; see `docs/18-m1b-ai-agent-architecture.md`.
 5. **Prioritized checklist** — every finding, ranked by priority (impact vs. effort), numbered 1 to N. This is the single most-used section — an owner should be able to work top-to-bottom and know they're always doing the highest-value thing next.
 6. **Findings detail** — the full structured breakdown of each finding (see Section 6), grouped by category.
 7. **Before/after example** — at least one real rewrite of actual copy pulled from their site (never a generic example), showing the Content Quality agent's work concretely.
@@ -101,7 +101,7 @@ This checklist runs (initially by manual human review during early MVP scans —
 - [ ] No contradictions between the executive summary, category scores, and individual findings (Rule 5.8).
 - [ ] The overall score and letter grade are consistent with the mix of finding severities (a report with 3 "critical" findings should not carry an "A" grade — checked against the deterministic weighting formula in `06-ai-agent-architecture.md`, not left to the LLM's own arithmetic).
 - [ ] The before/after example (Section 3.7) uses real text copied from the actual crawled page, not an invented example.
-- [ ] The lost-leads estimate includes its "estimate, not a guarantee" disclaimer.
+- [ ] The lost-leads estimate includes its "estimate, not a guarantee" disclaimer. *(N/A for M1b — this section is omitted entirely per the amendment to §3.4 above.)*
 - [ ] The prioritized checklist ranking is genuinely ordered by impact-vs-effort, not just by category order.
 - [ ] The PDF renders without layout errors, truncated text, or broken characters, and matches the web report's content.
 - [ ] Tone throughout is plain-English and professional — no unexplained jargon, no marketing hype, no line a real business owner would need to Google.

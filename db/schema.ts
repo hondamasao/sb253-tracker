@@ -36,7 +36,8 @@ export const agentRuns = pgTable("agent_runs", {
   scanId: uuid("scan_id")
     .notNull()
     .references(() => scans.id, { onDelete: "cascade" }),
-  // lighthouse | site_signals | content_quality | ai_visibility | site_completeness
+  // lighthouse | site_signals | technical_analysis | seo_analysis |
+  // conversion_optimization | trust_credibility | copywriting | report_synthesis
   agentType: text("agent_type").notNull(),
   status: text("status").notNull().default("queued"),
   score: integer("score"),
@@ -70,6 +71,15 @@ export const reports = pgTable("reports", {
     .defaultNow(),
 }).enableRLS();
 
+/**
+ * Columns map one-to-one to the 5-part finding structure required by
+ * docs/16-report-quality-standard.md §6: title = Problem (one sentence),
+ * whyItMatters, evidence, recommendation = Recommended action,
+ * expectedImpact. `evidenceRefs` stores the evidence IDs the finding
+ * cited (docs/18-m1b-ai-agent-architecture.md §5) so any finding can be
+ * traced back to the exact raw facts it was grounded in, permanently —
+ * not just checked once at generation time.
+ */
 export const findings = pgTable("findings", {
   id: uuid("id").primaryKey().defaultRandom(),
   reportId: uuid("report_id")
@@ -77,9 +87,12 @@ export const findings = pgTable("findings", {
     .references(() => reports.id, { onDelete: "cascade" }),
   category: text("category").notNull(),
   severity: text("severity").notNull(), // critical | high | medium | low
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  recommendation: text("recommendation").notNull(),
+  title: text("title").notNull(), // Problem
+  whyItMatters: text("why_it_matters").notNull(),
+  evidence: text("evidence").notNull(),
+  recommendation: text("recommendation").notNull(), // Recommended action
+  expectedImpact: text("expected_impact").notNull(),
+  evidenceRefs: jsonb("evidence_refs").notNull(),
   effortLevel: text("effort_level").notNull(), // low | medium | high
   beforeExample: text("before_example"),
   afterExample: text("after_example"),

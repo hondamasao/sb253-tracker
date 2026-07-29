@@ -14,6 +14,11 @@ function page(overrides: Partial<ParsedPage> = {}): ParsedPage {
     internalLinks: [],
     images: [],
     structuredData: { jsonLdTypes: [], jsonLdCount: 0, hasMicrodata: false, parseErrors: 0 },
+    visibleText: "Acme Plumbing is a licensed plumber serving the metro area.",
+    phoneNumbers: [],
+    hasContactForm: false,
+    ctaPhrases: [],
+    trustSignalMentions: [],
     ...overrides,
   };
 }

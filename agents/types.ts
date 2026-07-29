@@ -1,17 +1,31 @@
 import type { CrawlResult } from "@/lib/crawler";
+import type { LighthouseOutput } from "./lighthouse";
+import type { SiteSignalsOutput } from "./site-signals";
+import type { Finding } from "./shared/schemas";
+import type { SynthesisInput } from "./report-synthesis";
 
 /**
- * Scoped down from the full agent contract in docs/06-ai-agent-architecture.md
- * for M1: no `findings` field. M1 agents produce structured facts and, where
- * a real deterministic number exists, a score — never customer-facing
- * prose. `findings` (the Problem/Why/Evidence/Action/Impact write-ups from
- * docs/16-report-quality-standard.md) get added to this contract in the
- * milestone that introduces the AI-driven agents and the Synthesis Agent.
+ * `lighthouse`/`siteSignals` are the M1a agents' already-computed output,
+ * passed through in-memory for M1b's category agents to read — see
+ * docs/18-m1b-ai-agent-architecture.md §2. Optional and nullable because
+ * the M1a agent that produces them can itself fail (runAgentSafely never
+ * throws); a category agent that depends on missing data fails gracefully
+ * rather than crashing the scan (see each agent's own null-handling).
+ *
+ * `synthesisInput` is only populated for the Report Synthesis agent
+ * (agents/report-synthesis) — it's architecturally narrower than the
+ * category agents (docs/18 §1): it never sees crawlResult/lighthouse/
+ * siteSignals directly, only the already-validated findings and the
+ * deterministically-computed overall score/grade it must stay consistent
+ * with.
  */
 export type AgentContext = {
   scanId: string;
   websiteUrl: string;
   crawlResult: CrawlResult;
+  lighthouse?: LighthouseOutput | null;
+  siteSignals?: SiteSignalsOutput | null;
+  synthesisInput?: SynthesisInput;
 };
 
 export type AgentOutput = {
@@ -20,6 +34,14 @@ export type AgentOutput = {
   raw: Record<string, unknown>;
   modelUsed?: string;
   costUsd?: number;
+  /**
+   * The Problem/Why/Evidence/Action/Impact write-ups from
+   * docs/16-report-quality-standard.md, added in M1b. Only the category
+   * agents (agents/technical-analysis, seo-analysis, etc.) populate this —
+   * M1a's lighthouse/site_signals agents never do, since they produce
+   * structured facts, not customer-facing prose.
+   */
+  findings?: Finding[];
 };
 
 export type Agent = {

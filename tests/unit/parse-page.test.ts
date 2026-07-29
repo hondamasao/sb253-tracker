@@ -110,4 +110,51 @@ describe("parsePage", () => {
     const html = `<div itemscope itemtype="https://schema.org/LocalBusiness"></div>`;
     expect(parsePage(html, PAGE_URL).structuredData.hasMicrodata).toBe(true);
   });
+
+  it("extracts visible text but strips script/style content, without breaking structured data extraction", () => {
+    const html = `
+      <html><head>
+        <script type="application/ld+json">{"@type":"LocalBusiness"}</script>
+        <style>.hero { color: red; }</style>
+      </head><body>
+        <script>var trackingCode = "should not appear in visible text";</script>
+        <h1>Acme Plumbing</h1>
+        <p>We are licensed and insured, serving the metro area 24/7.</p>
+      </body></html>
+    `;
+    const result = parsePage(html, PAGE_URL);
+    expect(result.visibleText).toContain("Acme Plumbing");
+    expect(result.visibleText).toContain("licensed and insured");
+    expect(result.visibleText).not.toContain("trackingCode");
+    expect(result.visibleText).not.toContain("color: red");
+    // Removing script/style for text extraction must not affect JSON-LD parsing.
+    expect(result.structuredData.jsonLdTypes).toContain("LocalBusiness");
+  });
+
+  it("extracts phone numbers, deduplicated, requiring a separator", () => {
+    const html = `<body>Call us at 555-123-4567 or (555) 123-4567 for emergency service. Not a phone: 12345.</body>`;
+    const result = parsePage(html, PAGE_URL);
+    expect(result.phoneNumbers).toHaveLength(1);
+    expect(result.phoneNumbers[0]).toContain("555");
+  });
+
+  it("detects a contact form", () => {
+    expect(parsePage("<body><form></form></body>", PAGE_URL).hasContactForm).toBe(true);
+    expect(parsePage("<body>No form here.</body>", PAGE_URL).hasContactForm).toBe(false);
+  });
+
+  it("matches CTA phrases and trust-signal keywords from a fixed list", () => {
+    const html = `<body>Get a free estimate today. We are licensed, bonded, and insured, with a satisfaction guaranteed policy.</body>`;
+    const result = parsePage(html, PAGE_URL);
+    expect(result.ctaPhrases).toContain("free estimate");
+    expect(result.trustSignalMentions).toEqual(
+      expect.arrayContaining(["licensed", "bonded", "insured", "satisfaction guaranteed"]),
+    );
+  });
+
+  it("finds no CTA or trust phrases when none are present", () => {
+    const result = parsePage("<body>We fix pipes.</body>", PAGE_URL);
+    expect(result.ctaPhrases).toEqual([]);
+    expect(result.trustSignalMentions).toEqual([]);
+  });
 });

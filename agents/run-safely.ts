@@ -1,4 +1,5 @@
 import type { Agent, AgentContext } from "./types";
+import type { Finding } from "./shared/schemas";
 
 export type AgentRunResult =
   | {
@@ -8,6 +9,8 @@ export type AgentRunResult =
       raw: Record<string, unknown>;
       modelUsed?: string;
       costUsd?: number;
+      /** Only present for the category agents (M1b) — see agents/types.ts. */
+      findings?: Finding[];
     }
   | { status: "failed"; agentType: string; error: string };
 

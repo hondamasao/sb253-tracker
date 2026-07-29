@@ -32,8 +32,10 @@ const envSchema = z.object({
 
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 
-  // M1: scan engine data sources.
-  OPENAI_API_KEY: z.string().optional(),
+  // M1: scan engine data sources. Anthropic only, per
+  // docs/18-m1b-ai-agent-architecture.md — OpenAI isn't reachable from
+  // this project's dev sandbox and the team standardized on one provider
+  // for the report-writing agents rather than mixing vendors.
   ANTHROPIC_API_KEY: z.string().optional(),
   GOOGLE_PAGESPEED_API_KEY: z.string().optional(),
 

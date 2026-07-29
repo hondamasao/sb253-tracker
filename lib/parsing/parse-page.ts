@@ -10,6 +10,54 @@ import type {
 const MAX_LINKS_PER_PAGE = 50;
 const MAX_IMAGES_PER_PAGE = 50;
 const MAX_HEADINGS_PER_PAGE = 30;
+const MAX_VISIBLE_TEXT_LENGTH = 4_000;
+
+// Phone numbers: requires at least one separator between groups (dash,
+// dot, space, or parens) to avoid false-positiving on arbitrary 10-digit
+// runs that aren't actually phone numbers.
+const PHONE_NUMBER_REGEX = /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g;
+
+// Small, fixed, documented lists — deterministic keyword matching, not a
+// judgment call, per docs/18-m1b-ai-agent-architecture.md §2/§3.
+const CTA_PHRASES = [
+  "call now",
+  "call us",
+  "call today",
+  "book now",
+  "book online",
+  "schedule now",
+  "schedule service",
+  "get a quote",
+  "get a free quote",
+  "request a quote",
+  "request service",
+  "free estimate",
+  "get an estimate",
+  "contact us today",
+  "24/7",
+  "24-hour",
+  "emergency service",
+];
+
+const TRUST_KEYWORDS = [
+  "licensed",
+  "insured",
+  "bonded",
+  "certified",
+  "certification",
+  "guarantee",
+  "guaranteed",
+  "warranty",
+  "years in business",
+  "family owned",
+  "family-owned",
+  "bbb accredited",
+  "accredited",
+  "award-winning",
+  "5-star",
+  "five-star",
+  "satisfaction guaranteed",
+];
 
 /**
  * Extracts the structured facts a page contains — never the raw HTML
@@ -65,6 +113,16 @@ export function parsePage(html: string, pageUrl: string): ParsedPage {
     });
   });
 
+  // Extracted from a clone of <body> so removing <script>/<style> here
+  // never affects the `$` instance used above/below (structured data in
+  // particular still needs to read <script type="application/ld+json">).
+  const bodyClone = $("body").clone();
+  bodyClone.find("script, style, noscript").remove();
+  const visibleText = normalizeText(bodyClone.text()).slice(
+    0,
+    MAX_VISIBLE_TEXT_LENGTH,
+  );
+
   return {
     url: pageUrl,
     title,
@@ -75,7 +133,30 @@ export function parsePage(html: string, pageUrl: string): ParsedPage {
     internalLinks,
     images,
     structuredData: parseStructuredData($),
+    visibleText,
+    phoneNumbers: extractPhoneNumbers(visibleText),
+    hasContactForm: $("form").length > 0,
+    ctaPhrases: findMatchingPhrases(visibleText, CTA_PHRASES),
+    trustSignalMentions: findMatchingPhrases(visibleText, TRUST_KEYWORDS),
   };
+}
+
+function extractPhoneNumbers(text: string): string[] {
+  const matches = text.match(PHONE_NUMBER_REGEX) ?? [];
+  const seenDigits = new Set<string>();
+  const result: string[] = [];
+  for (const match of matches) {
+    const digits = match.replace(/\D/g, "");
+    if (seenDigits.has(digits)) continue;
+    seenDigits.add(digits);
+    result.push(match.trim());
+  }
+  return result;
+}
+
+function findMatchingPhrases(text: string, phrases: string[]): string[] {
+  const lower = text.toLowerCase();
+  return phrases.filter((phrase) => lower.includes(phrase));
 }
 
 function parseStructuredData($: cheerio.CheerioAPI): StructuredDataInfo {
