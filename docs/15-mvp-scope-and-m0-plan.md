@@ -159,12 +159,15 @@ create table orders (
 | Milestone | Deliverable | Depends on |
 |---|---|---|
 | **M0 — Foundation** | Empty-but-real app deployed, connected to a real database, CI green, error tracking working | Nothing |
-| **M1 — Core scan engine** | The 5 agents + synthesis, running end-to-end via Inngest, producing accurate raw JSON for real sites (no UI polish yet) | M0 |
-| **M2 — Report UI + PDF** | Landing page, scan-progress screen, teaser report, full report, PDF generation | M1 |
+| **M1a — Crawler & deterministic data pipeline** ✅ code complete | Crawl a site, collect structured facts (Lighthouse + on-page/technical/local SEO signals), store them — no AI calls, no recommendations. See `17-m1-crawler-architecture.md`. | M0 |
+| **M1b — AI-driven agents + Synthesis** | Content Quality, AI Visibility, and the Synthesis Agent — turns M1a's stored data into scores, findings, and the executive report, per `16-report-quality-standard.md` | M1a |
+| **M2 — Report UI + PDF** | Landing page, scan-progress screen, teaser report, full report, PDF generation | M1b |
 | **M3 — Payment** | Stripe Checkout, webhook, unlock logic, email delivery, basic abuse rate-limiting | M2 |
 | **M4 — Launch polish** | Error states, mobile pass, terms/privacy pages, real-domain deploy, QA against 15-20 real sites, first customer | M3 |
 
-This document covers **M0 only** in task-list detail (below). We write M1's task list once M0 is actually done, per the "never move to the next milestone until the previous one is complete" rule — but the table above exists so you can see the whole path to revenue at a glance.
+**M1 was split into M1a/M1b** during implementation: the original single "M1" bundled all 5 agents plus AI synthesis, but that mixes two very different kinds of work (deterministic data collection vs. AI-authored prose) with two very different risk profiles — see `17-m1-crawler-architecture.md`'s opening note. M1a is done at the code level (crawler, Lighthouse agent, Site Signals agent, persistence, API route, Inngest job, 40 passing tests); M1b (Content Quality, AI Visibility, Synthesis) has not been started.
+
+This document covers **M0 only** in task-list detail (below); M1a's equivalent detail lives in `17-m1-crawler-architecture.md`. We write M1b's task list once M1a is confirmed working against a real deployment, per the "never move to the next milestone until the previous one is complete" rule — but the table above exists so you can see the whole path to revenue at a glance.
 
 ## 3. M0 — exact task list
 

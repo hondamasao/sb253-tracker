@@ -22,6 +22,12 @@ jobs:
 
       - run: npm run lint
 
+      # No real secrets needed — the unit tests are pure functions, and
+      # the integration tests spin up their own local HTTP fixture
+      # servers rather than calling real external sites (see
+      # tests/integration/crawl-site.test.ts for why).
+      - run: npm run test
+
       # No real secrets are configured here on purpose: M0's code never
       # requires env vars at build time (see lib/env.ts) — only when a
       # route actually runs at request time. That stays true through M1;
