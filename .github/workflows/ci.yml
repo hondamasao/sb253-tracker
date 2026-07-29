@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm run lint
+
+      # No real secrets are configured here on purpose: M0's code never
+      # requires env vars at build time (see lib/env.ts) — only when a
+      # route actually runs at request time. That stays true through M1;
+      # revisit once a milestone needs build-time secrets (none do yet).
+      - run: npm run build

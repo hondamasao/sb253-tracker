@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Sentry
+.sentryclirc
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
+next-env.d.ts
+*.tsbuildinfo
