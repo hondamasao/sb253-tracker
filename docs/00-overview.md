@@ -2,6 +2,8 @@
 
 This `docs/` folder is the single source of truth for how GrowthOS is designed and built. Read documents in order the first time. After that, use this page as an index.
 
+> **Currently building:** the MVP (smallest version that can accept payment and deliver a report — no accounts/dashboard/monitoring yet). See `15-mvp-scope-and-m0-plan.md` for the active, reduced-scope plan. Documents 01-14 describe the full long-term product and resume once the MVP has a paying customer.
+
 We build in **milestones** (see `09-milestones.md`). We do not start milestone N+1 until milestone N is done, tested, and deployed. This keeps a beginner-friendly, low-risk pace and means you always have a working product, never a half-finished pile of code.
 
 ## Reading order

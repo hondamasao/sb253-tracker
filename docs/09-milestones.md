@@ -1,5 +1,7 @@
 # Development Milestones
 
+> **⚠️ Superseded for now by `15-mvp-scope-and-m0-plan.md`.** We reduced scope to the smallest version that can accept payment and deliver a report (no accounts, no dashboard, no monitoring — see that doc for what changed and why). This file describes the full long-term product and becomes active again once the MVP has a paying customer, picking up around where M4/M5 below start (accounts, dashboard). Until then, follow the M0→M4 sequence in `15-mvp-scope-and-m0-plan.md`.
+
 This is the actual build order we will execute against, one at a time. **We do not start a milestone until the previous one's "Definition of Done" is fully checked off.** Each milestone produces something real you can look at or click, never just invisible internal plumbing on its own.
 
 Status legend: ⬜ not started · 🟨 in progress · ✅ done. (Update this file as we go — it's our shared source of truth for progress.)
