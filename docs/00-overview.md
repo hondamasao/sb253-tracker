@@ -24,6 +24,8 @@ We build in **milestones** (see `09-milestones.md`). We do not start milestone N
 | 12 | `12-security-plan.md` | How do we protect user data and the business? |
 | 13 | `13-pricing.md` | What do we charge, and why? |
 | 14 | `14-future-expansion.md` | What comes after the core product proves itself? |
+| 15 | `15-mvp-scope-and-m0-plan.md` | **Active plan.** What's the smallest version we build first, and the exact M0 setup steps? |
+| 16 | `16-report-quality-standard.md` | What makes a report worth $29 — the bar every AI finding must clear before it ships |
 
 ## Tech stack — final decisions
 

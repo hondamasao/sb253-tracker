@@ -2,6 +2,8 @@
 
 **Status: this document supersedes `01-srd.md`, `03-database-schema.md`, `06-ai-agent-architecture.md`, and `09-milestones.md` for the MVP build only.** Those documents describe the full, eventual product (accounts, teams, monitoring, admin, API) — they are not wrong, they're just not what we build first. This doc defines the smallest real thing that can take a customer's money and give them something worth paying for. Once we have a paying customer, we come back to the original roadmap starting at what was M4/M5.
 
+**Companion document: `16-report-quality-standard.md`.** This doc defines *what* we build (scope, architecture, files). That doc defines *what "good" means* for the one thing this entire product actually sells — the report itself. M1's agent prompts and M2's report UI must be built against that standard, not just against the category list in Section 1.2 below; a technically-complete report that reads as generic AI filler fails the actual goal ("deliver a valuable report") even if every box in this document is checked.
+
 **MVP goal, stated precisely:** A stranger enters a website URL, sees a free teaser score, pays $29 once, and receives a full AI-generated growth audit as a web report + downloadable PDF. No login. No dashboard. No monitoring.
 
 ## 1. Revised MVP architecture
