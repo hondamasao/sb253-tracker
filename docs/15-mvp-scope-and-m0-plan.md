@@ -168,6 +168,8 @@ This document covers **M0 only** in task-list detail (below). We write M1's task
 
 ## 3. M0 — exact task list
 
+> **Status: code complete, external accounts pending.** Everything in §3.2 that's pure code is done, committed, and passes typecheck/lint/build with zero secrets present (see the commit on `claude/growthos-saas-architecture-dwgva1`). Everything in §3.1 requires an account only you can create (identity/billing) and is still open — M0 cannot be *fully* done, and M1 cannot start, until those are filled in and the live-verification items in §3.2/3.3 are actually checked against a real Supabase/Vercel/Sentry/Inngest project. See the M0 completion summary for exactly what's left.
+
 ### 3.1 External accounts (start these first — some have lead time you don't control)
 
 - [ ] **Stripe**: create account, submit business verification **today** — this can take several business days and is the one thing on this list outside our control. Get test-mode API keys in the meantime.
@@ -182,25 +184,27 @@ This document covers **M0 only** in task-list detail (below). We write M1's task
 
 ### 3.2 Project scaffolding
 
-- [ ] `npx create-next-app@latest` — TypeScript, Tailwind, App Router, ESLint, `src/` off (matches `04-folder-structure.md`).
-- [ ] `npx shadcn@latest init`, add base components: `button`, `input`, `card`.
-- [ ] Install and configure Drizzle ORM; write `db/schema.ts` for the 5 MVP tables above.
-- [ ] Generate and run the first migration against the real Supabase project (`drizzle-kit generate`, `drizzle-kit migrate`).
-- [ ] Enable RLS with no policies on all 5 tables (default-deny).
-- [ ] Write `lib/env.ts` — a Zod schema validating every required environment variable at startup, so a missing key fails loudly at boot instead of mysteriously at runtime.
-- [ ] Write `.env.example` documenting every variable used.
-- [ ] Write `lib/supabase/admin.ts` (service-role client) and `lib/supabase/storage.ts` (helper for uploading PDFs) — no browser-side Supabase client needed yet, since MVP has no client-side DB access.
-- [ ] Install Inngest, write `inngest/client.ts`, add the `app/api/inngest/route.ts` serve handler, confirm `npx inngest-cli dev` connects locally.
-- [ ] Run the Sentry setup wizard (`npx @sentry/wizard@latest -i nextjs`), trigger a test error, confirm it appears in the Sentry dashboard.
-- [ ] Add `app/api/health/route.ts` — a trivial endpoint returning `{ ok: true }`, used to confirm deploys are actually live.
-- [ ] Push to GitHub, confirm Vercel auto-deploys the branch.
-- [ ] Add `.github/workflows/ci.yml`: install, typecheck, lint, build on every PR.
-- [ ] Set every environment variable in Vercel (Production and Preview separately; Preview uses Stripe/Inngest *test* keys).
-- [ ] Confirm the deployed `/api/health` endpoint responds on the real Vercel URL.
+- [x] `npx create-next-app@latest` — TypeScript, Tailwind, App Router, ESLint, `src/` off (matches `04-folder-structure.md`). *(Hand-built instead of via the CLI to keep full control over the exact Tailwind v3 / config choices — same result.)*
+- [x] `npx shadcn@latest init`, add base components: `button`, `input`, `card`. *(Hand-written to match shadcn's standard output — the live registry fetch wasn't used, but `components.json` is in place so `npx shadcn add` works normally from here on.)*
+- [x] Install and configure Drizzle ORM; write `db/schema.ts` for the 5 MVP tables above.
+- [x] Generate the first migration (`drizzle-kit generate`) — **not yet run against a real database** (`drizzle-kit migrate`) since no Supabase project exists yet. This is the one scaffolding item genuinely blocked on §3.1.
+- [x] Enable RLS with no policies on all 5 tables (default-deny) — present in the generated migration, not yet applied to a live database for the same reason.
+- [x] Write `lib/env.ts` — Zod-validated environment config. *(Ended up shape-only at the schema level, with a `requireEnv()` helper for point-of-use requiredness — see the M0 completion summary for why the originally-planned "throws on missing required var at import time" design broke `next build` and had to change.)*
+- [x] Write `.env.example` documenting every variable used.
+- [x] Write `lib/supabase/admin.ts` (service-role client) and `lib/supabase/storage.ts` (helper for uploading PDFs) — no browser-side Supabase client needed yet, since MVP has no client-side DB access.
+- [x] Install Inngest, write `inngest/client.ts`, add the `app/api/inngest/route.ts` serve handler — verified locally against the Inngest Dev Server (`INNGEST_DEV=1`); **not yet verified against Inngest Cloud**, which needs the account in §3.1.
+- [ ] Run the Sentry setup wizard — **not run** (it requires an interactive Sentry account login). Instead, Sentry is wired manually (`instrumentation.ts`, `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`) and builds clean with no DSN set; a real DSN from a Sentry account is still needed to verify an error actually arrives.
+- [x] Add `app/api/health/route.ts` — verified locally, returns `{ ok: true, timestamp }`.
+- [ ] Push to GitHub, confirm Vercel auto-deploys the branch. *(Pushed to GitHub; Vercel project doesn't exist yet — needs §3.1.)*
+- [x] Add `.github/workflows/ci.yml`: typecheck, lint, build on every PR.
+- [ ] Set every environment variable in Vercel (Production and Preview separately). *(Blocked on the Vercel + Supabase + Sentry + Inngest accounts existing.)*
+- [ ] Confirm the deployed `/api/health` endpoint responds on the real Vercel URL. *(Blocked on the same.)*
 
 ### 3.3 Definition of done for M0
 
 A real, mostly-empty GrowthOS app is live on a public Vercel URL. It's connected to a real Supabase Postgres database with the 5 MVP tables created. `/api/health` returns 200 in production. A deliberately-thrown test error shows up in Sentry. The Inngest dev/cloud connection is verified. CI is green on a PR. **No scan logic, no report UI, and no payment code exists yet** — M0 is infrastructure only, so M1 can be built on a foundation that's already proven to deploy correctly.
+
+**Current state: the code half of this is true; the "live" half isn't yet.** `next build`/`lint`/`typecheck` are all green with zero secrets configured, and `/api/health` + `/api/inngest` both verified locally. What's outstanding is entirely the external-account work in §3.1 plus wiring those real credentials into a real Vercel deployment — no more code needs to be written for M0 to be done, only accounts created and values plugged in.
 
 ## 4. Files to create in M0
 
