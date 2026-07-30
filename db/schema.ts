@@ -64,6 +64,14 @@ export const reports = pgTable("reports", {
   estimatedLostLeadsMin: integer("estimated_lost_leads_min"),
   estimatedLostLeadsMax: integer("estimated_lost_leads_max"),
   monthlyActionPlan: jsonb("monthly_action_plan").notNull(),
+  /**
+   * Degradable categories that failed and were left out
+   * (docs/19-m1c-security-and-evaluation.md §5). Stored structured for
+   * rendering, but the disclosure is ALSO written into
+   * `executive_summary` so a renderer that forgets this field still shows
+   * the customer what's missing. Never a silent omission.
+   */
+  omittedCategories: jsonb("omitted_categories").notNull().default([]),
   isUnlocked: boolean("is_unlocked").notNull().default(false),
   pdfUrl: text("pdf_url"),
   generatedAt: timestamp("generated_at", { withTimezone: true })
@@ -102,6 +110,47 @@ export const findings = pgTable("findings", {
     .defaultNow(),
 }).enableRLS();
 
+/**
+ * Denormalized per-scan benchmark row, written in the SAME transaction as
+ * the report (docs/19-m1c-security-and-evaluation.md §6).
+ *
+ * Same-transaction is the whole point: the numbers are derivable from
+ * `reports` + `agent_runs` today, but only while those rows survive and
+ * only while the derivation rules stay unchanged. Recording the answer at
+ * write time means we can never end up unable to backfill. Category
+ * scores are individual columns rather than jsonb specifically so
+ * percentile queries (`percentile_cont(0.5) WITHIN GROUP (ORDER BY
+ * seo_score)`) work directly, sliced by industry, CMS, or page count.
+ *
+ * No UI consumes this yet — that's intentional. It exists so the data
+ * starts accumulating now rather than beginning the day someone wants it.
+ */
+export const scanBenchmarks = pgTable("scan_benchmarks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  scanId: uuid("scan_id")
+    .notNull()
+    .unique()
+    .references(() => scans.id, { onDelete: "cascade" }),
+  /** Best-effort keyword guess (agents/shared/detect-industry.ts); null when undetected. */
+  industry: text("industry"),
+  /** Coarse platform fingerprint (lib/parsing/detect-cms.ts). */
+  cms: text("cms").notNull().default("unknown"),
+  pageCount: integer("page_count").notNull(),
+  overallScore: integer("overall_score").notNull(),
+  technicalScore: integer("technical_score"),
+  seoScore: integer("seo_score"),
+  conversionScore: integer("conversion_score"),
+  trustScore: integer("trust_score"),
+  copywritingScore: integer("copywriting_score"),
+  findingCount: integer("finding_count").notNull(),
+  criticalFindingCount: integer("critical_finding_count").notNull(),
+  /** Real measured spend for this scan — the data that will reset the provisional ceiling. */
+  totalCostUsd: numeric("total_cost_usd", { precision: 10, scale: 5 }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();
+
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   scanId: uuid("scan_id")
@@ -129,6 +178,14 @@ export const scansRelations = relations(scans, ({ many, one }) => ({
   agentRuns: many(agentRuns),
   report: one(reports, { fields: [scans.id], references: [reports.scanId] }),
   order: one(orders, { fields: [scans.id], references: [orders.scanId] }),
+  benchmark: one(scanBenchmarks, {
+    fields: [scans.id],
+    references: [scanBenchmarks.scanId],
+  }),
+}));
+
+export const scanBenchmarksRelations = relations(scanBenchmarks, ({ one }) => ({
+  scan: one(scans, { fields: [scanBenchmarks.scanId], references: [scans.id] }),
 }));
 
 export const agentRunsRelations = relations(agentRuns, ({ one }) => ({

@@ -1,33 +1,46 @@
 import "server-only";
 import { getDb } from "@/db";
-import { findings, reports } from "@/db/schema";
+import { findings, reports, scanBenchmarks } from "@/db/schema";
 import type { AssembledReport } from "@/lib/report/assemble-report";
+import type { OmittedCategory } from "@/lib/pipeline/failure-policy";
+import type { DetectedCms } from "@/lib/parsing/detect-cms";
+
+export type BenchmarkMetadata = {
+  industry: string | null;
+  cms: DetectedCms;
+  pageCount: number;
+  totalCostUsd: number;
+};
 
 /**
- * Persists an assembled report (docs/18-m1b-ai-agent-architecture.md's
- * deterministic assembly output) plus every validated finding, in a single
- * transaction — a report with only some of its findings saved would be a
- * silently-broken report, so this either fully succeeds or fully rolls
- * back. `is_unlocked` is left at its default `false`: unlocking a report
- * is M3's (payment) job, not this one's.
+ * Persists an assembled report, every validated finding, and the
+ * benchmark row — in a single transaction.
  *
- * The `monthly_action_plan` jsonb column stores only priority-rank numbers
- * per month (not full finding text) — the findings themselves are the
- * single source of truth, already saved as rows in `findings` with their
- * own `priority_rank`; the app joins the two at render time.
+ * All three together or none: a report with only some of its findings is
+ * silently wrong, and a benchmark row that can drift from the report it
+ * describes is worse than no benchmark row. Writing the benchmark here
+ * rather than in a later job is what guarantees we can never be unable to
+ * backfill it (docs/19-m1c-security-and-evaluation.md §6).
+ *
+ * `is_unlocked` stays false: unlocking is the payment milestone's job.
  */
 export async function saveReport(params: {
   scanId: string;
   assembled: AssembledReport;
   executiveSummary: string;
+  omitted: OmittedCategory[];
+  benchmark: BenchmarkMetadata;
 }): Promise<{ reportId: string }> {
-  const { scanId, assembled, executiveSummary } = params;
+  const { scanId, assembled, executiveSummary, omitted, benchmark } = params;
 
   const monthlyActionPlan = {
-    month1: assembled.monthlyActionPlan.month1.map((finding) => finding.priorityRank),
-    month2: assembled.monthlyActionPlan.month2.map((finding) => finding.priorityRank),
-    month3: assembled.monthlyActionPlan.month3.map((finding) => finding.priorityRank),
+    month1: assembled.monthlyActionPlan.month1.map((f) => f.priorityRank),
+    month2: assembled.monthlyActionPlan.month2.map((f) => f.priorityRank),
+    month3: assembled.monthlyActionPlan.month3.map((f) => f.priorityRank),
   };
+
+  const scoreFor = (category: string): number | null =>
+    assembled.categoryScores[category] ?? null;
 
   return getDb().transaction(async (tx) => {
     const [reportRow] = await tx
@@ -38,6 +51,7 @@ export async function saveReport(params: {
         letterGrade: assembled.letterGrade,
         executiveSummary,
         monthlyActionPlan,
+        omittedCategories: omitted,
       })
       .returning({ id: reports.id });
 
@@ -64,6 +78,24 @@ export async function saveReport(params: {
         })),
       );
     }
+
+    await tx.insert(scanBenchmarks).values({
+      scanId,
+      industry: benchmark.industry,
+      cms: benchmark.cms,
+      pageCount: benchmark.pageCount,
+      overallScore: assembled.overallScore,
+      technicalScore: scoreFor("technical_analysis"),
+      seoScore: scoreFor("seo_analysis"),
+      conversionScore: scoreFor("conversion_optimization"),
+      trustScore: scoreFor("trust_credibility"),
+      copywritingScore: scoreFor("copywriting"),
+      findingCount: assembled.prioritizedFindings.length,
+      criticalFindingCount: assembled.prioritizedFindings.filter(
+        (f) => f.severity === "critical",
+      ).length,
+      totalCostUsd: benchmark.totalCostUsd.toFixed(5),
+    });
 
     return { reportId: reportRow.id };
   });

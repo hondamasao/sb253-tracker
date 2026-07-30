@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createScanInputSchema } from "@/lib/validations/scan";
-import { checkScanRateLimit } from "@/lib/rate-limit";
+import { checkScanRateLimit, checkDailySpendCap } from "@/lib/rate-limit";
 import { createScan } from "@/lib/scans";
 import { normalizeInputUrl } from "@/lib/crawler";
 import { assertSafeUrl, UnsafeUrlError } from "@/lib/ssrf-guard";
@@ -24,14 +24,24 @@ function getClientIp(request: NextRequest): string | null {
 export async function POST(request: NextRequest) {
   const ipAddress = getClientIp(request);
 
+  // Both limits are checked at the queue boundary, before any scan row is
+  // created and before anything is enqueued — a scan aborted mid-pipeline
+  // has already spent most of its money (docs/19 §1).
   const rateLimit = await checkScanRateLimit(ipAddress);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
-        error: `Too many scans from this address. Limit is ${rateLimit.limit} per hour.`,
+        error:
+          rateLimit.reason ??
+          `Too many scans from this address. Limit is ${rateLimit.limit} per hour.`,
       },
       { status: 429 },
     );
+  }
+
+  const spendCap = await checkDailySpendCap();
+  if (!spendCap.allowed) {
+    return NextResponse.json({ error: spendCap.reason }, { status: 503 });
   }
 
   let body: unknown;
@@ -59,6 +69,9 @@ export async function POST(request: NextRequest) {
   // this anyway (URLs can change via redirect), so this is a fast-path
   // convenience, not the only line of defense.
   try {
+    // Discards the validated addresses on purpose — this is only a
+    // fast-fail check so we don't queue a doomed scan. The crawler
+    // re-validates and pins its own connection later.
     await assertSafeUrl(normalizedUrl);
   } catch (error) {
     if (error instanceof UnsafeUrlError) {

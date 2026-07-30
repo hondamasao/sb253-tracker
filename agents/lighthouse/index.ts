@@ -69,6 +69,11 @@ export const lighthouseAgent: Agent = {
 };
 
 async function runLighthouseAgent(ctx: AgentContext): Promise<AgentOutput> {
+  if (!ctx.crawlResult) {
+    throw new Error(
+      "Lighthouse agent requires a crawl result — it is a capture-phase agent and cannot run from a stored evidence bundle.",
+    );
+  }
   const targetUrl = ctx.crawlResult.homepage.finalUrl;
 
   const params = new URLSearchParams();

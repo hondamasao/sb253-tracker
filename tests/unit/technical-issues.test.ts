@@ -19,12 +19,15 @@ function page(overrides: Partial<ParsedPage> = {}): ParsedPage {
     hasContactForm: false,
     ctaPhrases: [],
     trustSignalMentions: [],
+    generatorMeta: null,
+    assetHostSample: "",
     ...overrides,
   };
 }
 
 const goodRobots: RobotsInfo = {
   fetched: true,
+  originReachable: true,
   content: "User-agent: *\nAllow: /",
   sitemapUrls: [],
   homepageAllowed: true,
@@ -163,7 +166,7 @@ describe("detectTechnicalIssues", () => {
   it("flags a missing sitemap as medium severity, not fetched robots as low", () => {
     const issues = detectTechnicalIssues({
       pages: [page()],
-      robots: { fetched: false, content: null, sitemapUrls: [], homepageAllowed: true },
+      robots: { fetched: false, originReachable: true, content: null, sitemapUrls: [], homepageAllowed: true },
       sitemap: { fetched: false, sourceUrl: null, urls: [], isIndex: false },
       ssl: goodSsl,
     });

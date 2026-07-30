@@ -21,6 +21,13 @@ export type FailedPage = {
 
 export type RobotsInfo = {
   fetched: boolean;
+  /**
+   * True when the origin answered at the HTTP level at all — including a
+   * 404. Distinguishes "this site has no robots.txt" from "this scheme
+   * doesn't work here", which the crawler needs because it probes the
+   * scheme via robots.txt before fetching anything else.
+   */
+  originReachable: boolean;
   /** Raw robots.txt content, capped in length — kept because it's small and directly requested as data to collect. */
   content: string | null;
   sitemapUrls: string[];

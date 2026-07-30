@@ -39,6 +39,11 @@ export const siteSignalsAgent: Agent = {
 
 async function runSiteSignalsAgent(ctx: AgentContext): Promise<AgentOutput> {
   const { crawlResult } = ctx;
+  if (!crawlResult) {
+    throw new Error(
+      "Site Signals agent requires a crawl result — it is a capture-phase agent and cannot run from a stored evidence bundle.",
+    );
+  }
 
   const crawledPages = [crawlResult.homepage, ...crawlResult.additionalPages];
   const parsedPages: ParsedPage[] = crawledPages.map((page) =>

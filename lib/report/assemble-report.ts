@@ -28,6 +28,8 @@ export type LetterGrade = "A" | "B" | "C" | "D" | "F";
 export type AssembledReport = {
   overallScore: number;
   letterGrade: LetterGrade;
+  /** Per-category score keyed by agent type, for the benchmark row (docs/19 §6). */
+  categoryScores: Record<string, number>;
   prioritizedFindings: PrioritizedFinding[];
   monthlyActionPlan: MonthlyActionPlan;
   /** Feeds directly into the Report Synthesis agent's AgentContext.synthesisInput. */
@@ -90,6 +92,9 @@ export function assembleReport(categoryResults: CategoryReportInput[]): Assemble
   return {
     overallScore,
     letterGrade,
+    categoryScores: Object.fromEntries(
+      scoredCategories.map((category) => [category.category, category.score]),
+    ),
     prioritizedFindings,
     monthlyActionPlan,
     synthesisInput: {

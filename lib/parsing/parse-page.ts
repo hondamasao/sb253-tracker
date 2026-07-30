@@ -138,7 +138,25 @@ export function parsePage(html: string, pageUrl: string): ParsedPage {
     hasContactForm: $("form").length > 0,
     ctaPhrases: findMatchingPhrases(visibleText, CTA_PHRASES),
     trustSignalMentions: findMatchingPhrases(visibleText, TRUST_KEYWORDS),
+    generatorMeta: normalizeText($('meta[name="generator"]').attr("content")) || null,
+    assetHostSample: collectAssetHostSample($),
   };
+}
+
+const MAX_ASSET_HOST_SAMPLE_LENGTH = 2_000;
+
+/**
+ * A capped sample of the URLs this page loads assets from — enough to
+ * fingerprint a site builder's CDN without retaining the page's markup
+ * (which docs/17 §5 deliberately does not store).
+ */
+function collectAssetHostSample($: cheerio.CheerioAPI): string {
+  const urls: string[] = [];
+  $("script[src], link[href], img[src]").each((_, el) => {
+    const value = $(el).attr("src") ?? $(el).attr("href");
+    if (value) urls.push(value);
+  });
+  return urls.join(" ").slice(0, MAX_ASSET_HOST_SAMPLE_LENGTH);
 }
 
 function extractPhoneNumbers(text: string): string[] {

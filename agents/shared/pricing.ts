@@ -12,6 +12,9 @@ export const MODEL_PRICING: Record<
 > = {
   "claude-haiku-4-5-20251001": { inputPerMillionUsd: 1, outputPerMillionUsd: 5 },
   "claude-sonnet-5": { inputPerMillionUsd: 3, outputPerMillionUsd: 15 },
+  // Judge only (evals/judge) — never used by the scan pipeline. A stronger
+  // model than either generator, to reduce self-preference bias.
+  "claude-opus-5": { inputPerMillionUsd: 5, outputPerMillionUsd: 25 },
 };
 
 /**

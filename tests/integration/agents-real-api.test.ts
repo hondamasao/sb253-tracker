@@ -138,7 +138,7 @@ function buildFixtureCrawlResult(): CrawlResult {
       },
     ],
     failedPages: [],
-    robots: { fetched: true, content: "User-agent: *\nAllow: /", sitemapUrls: [], homepageAllowed: true },
+    robots: { fetched: true, originReachable: true, content: "User-agent: *\nAllow: /", sitemapUrls: [], homepageAllowed: true },
     sitemap: {
       fetched: true,
       sourceUrl: "https://acmeplumbing.example/sitemap.xml",

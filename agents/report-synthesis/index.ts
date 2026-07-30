@@ -1,5 +1,6 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { getAnthropicClient, passesBannedContentRules } from "../shared";
+import { projectWorstCaseCostUsd } from "@/lib/budget";
 import { calculateCostUsd } from "../shared/pricing";
 import { buildSynthesisSystemPrompt } from "../shared/prompt";
 import { synthesisOutputSchema } from "../shared/schemas";
@@ -49,17 +50,33 @@ async function runReportSynthesisAgent(ctx: AgentContext): Promise<AgentOutput> 
   }
 
   const client = getAnthropicClient();
+  const systemPrompt = buildSynthesisSystemPrompt();
+  const userMessage = buildUserMessage(synthesisInput);
 
-  const response = await client.messages.parse({
+  const projected = projectWorstCaseCostUsd({
     model: SYNTHESIS_MODEL,
-    max_tokens: SYNTHESIS_MAX_TOKENS,
-    system: buildSynthesisSystemPrompt(),
-    messages: [{ role: "user", content: buildUserMessage(synthesisInput) }],
-    output_config: { format: zodOutputFormat(synthesisOutputSchema) },
+    promptChars: systemPrompt.length + userMessage.length,
+    maxTokens: SYNTHESIS_MAX_TOKENS,
   });
+  ctx.budget?.reserve(projected, "report synthesis");
+
+  let response;
+  try {
+    response = await client.messages.parse({
+      model: SYNTHESIS_MODEL,
+      max_tokens: SYNTHESIS_MAX_TOKENS,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+      output_config: { format: zodOutputFormat(synthesisOutputSchema) },
+    });
+  } catch (error) {
+    ctx.budget?.release(projected);
+    throw error;
+  }
 
   const parsed = response.parsed_output;
   if (!parsed) {
+    ctx.budget?.release(projected);
     throw new Error("Anthropic response did not include parsed structured output.");
   }
 

@@ -39,6 +39,22 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   GOOGLE_PAGESPEED_API_KEY: z.string().optional(),
 
+  // M1c spend controls (docs/19-m1c-security-and-evaluation.md §1). All
+  // three are independent ceilings guarding different failure modes, and
+  // all are env-configurable so they can be retuned without a redeploy.
+  //
+  //  - SCAN: one runaway scan.
+  //  - DAILY: many individually-compliant scans. A per-request limit does
+  //    not bound spend; 2,000 legitimate scans still cost real money.
+  //  - EVAL: a long prompt-tuning loop. Judging the golden set on Opus 5
+  //    costs materially more per run than a scan does.
+  SCAN_COST_CEILING_USD: z.coerce.number().positive().optional(),
+  DAILY_SPEND_CAP_USD: z.coerce.number().positive().optional(),
+  EVAL_SPEND_CAP_USD: z.coerce.number().positive().optional(),
+
+  // Product decision as much as a security one — see lib/rate-limit.ts.
+  SCANS_PER_IP_PER_HOUR: z.coerce.number().int().positive().optional(),
+
   // M3: payments + email.
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),

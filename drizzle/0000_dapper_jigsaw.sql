@@ -56,6 +56,7 @@ CREATE TABLE "reports" (
 	"estimated_lost_leads_min" integer,
 	"estimated_lost_leads_max" integer,
 	"monthly_action_plan" jsonb NOT NULL,
+	"omitted_categories" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"is_unlocked" boolean DEFAULT false NOT NULL,
 	"pdf_url" text,
 	"generated_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -63,6 +64,26 @@ CREATE TABLE "reports" (
 );
 --> statement-breakpoint
 ALTER TABLE "reports" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE TABLE "scan_benchmarks" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"scan_id" uuid NOT NULL,
+	"industry" text,
+	"cms" text DEFAULT 'unknown' NOT NULL,
+	"page_count" integer NOT NULL,
+	"overall_score" integer NOT NULL,
+	"technical_score" integer,
+	"seo_score" integer,
+	"conversion_score" integer,
+	"trust_score" integer,
+	"copywriting_score" integer,
+	"finding_count" integer NOT NULL,
+	"critical_finding_count" integer NOT NULL,
+	"total_cost_usd" numeric(10, 5),
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "scan_benchmarks_scan_id_unique" UNIQUE("scan_id")
+);
+--> statement-breakpoint
+ALTER TABLE "scan_benchmarks" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "scans" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"website_url" text NOT NULL,
@@ -80,4 +101,5 @@ ALTER TABLE "scans" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "agent_runs" ADD CONSTRAINT "agent_runs_scan_id_scans_id_fk" FOREIGN KEY ("scan_id") REFERENCES "public"."scans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "findings" ADD CONSTRAINT "findings_report_id_reports_id_fk" FOREIGN KEY ("report_id") REFERENCES "public"."reports"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orders" ADD CONSTRAINT "orders_scan_id_scans_id_fk" FOREIGN KEY ("scan_id") REFERENCES "public"."scans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "reports" ADD CONSTRAINT "reports_scan_id_scans_id_fk" FOREIGN KEY ("scan_id") REFERENCES "public"."scans"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "reports" ADD CONSTRAINT "reports_scan_id_scans_id_fk" FOREIGN KEY ("scan_id") REFERENCES "public"."scans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "scan_benchmarks" ADD CONSTRAINT "scan_benchmarks_scan_id_scans_id_fk" FOREIGN KEY ("scan_id") REFERENCES "public"."scans"("id") ON DELETE cascade ON UPDATE no action;

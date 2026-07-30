@@ -3,6 +3,7 @@ import type { LighthouseOutput } from "./lighthouse";
 import type { SiteSignalsOutput } from "./site-signals";
 import type { Finding } from "./shared/schemas";
 import type { SynthesisInput } from "./report-synthesis";
+import type { ScanBudget } from "@/lib/budget";
 
 /**
  * `lighthouse`/`siteSignals` are the M1a agents' already-computed output,
@@ -22,10 +23,24 @@ import type { SynthesisInput } from "./report-synthesis";
 export type AgentContext = {
   scanId: string;
   websiteUrl: string;
-  crawlResult: CrawlResult;
+  /**
+   * Only the capture-phase agents (lighthouse, site_signals) need the raw
+   * crawl, and they throw if it's absent. It is optional so the analysis
+   * phase — which by design reads only `lighthouse`/`siteSignals` — can
+   * run from a stored evidence bundle without fabricating a crawl result.
+   * That absence is what lets the type system prove replay is complete
+   * rather than us asserting it.
+   */
+  crawlResult?: CrawlResult;
   lighthouse?: LighthouseOutput | null;
   siteSignals?: SiteSignalsOutput | null;
   synthesisInput?: SynthesisInput;
+  /**
+   * The scan's shared spend ceiling (lib/budget.ts). Every AI-calling
+   * agent reserves against it before dispatch; a breach aborts the
+   * analysis and makes the scan unshippable (docs/19 §5).
+   */
+  budget?: ScanBudget;
 };
 
 export type AgentOutput = {

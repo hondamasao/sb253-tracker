@@ -93,6 +93,21 @@ export async function saveAgentRun(
  * against our own database instead of standing up Upstash Redis this
  * early, per docs/15-mvp-scope-and-m0-plan.md §1.1.
  */
+/**
+ * Total real dollars spent on AI calls since `since`, summed from the
+ * per-call costs already recorded on `agent_runs`. Backs the global daily
+ * spend cap (lib/rate-limit.ts) — actual measured spend, never an
+ * estimate, because a cap built on estimates is not a cap.
+ */
+export async function sumAgentSpendSince(since: Date): Promise<number> {
+  const result = await getDb()
+    .select({ total: sql<string | null>`coalesce(sum(${agentRuns.costUsd}), 0)` })
+    .from(agentRuns)
+    .where(gte(agentRuns.createdAt, since));
+
+  return Number(result[0]?.total ?? 0);
+}
+
 export async function countRecentScansByIp(
   ipAddress: string,
   sinceMinutesAgo: number,
